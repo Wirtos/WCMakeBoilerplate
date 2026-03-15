@@ -1,0 +1,7 @@
+@PACKAGE_INIT@
+
+include("${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@Targets.cmake")
+
+# Checks if WLib::WLib component is required,
+# if any other component is required we issue an error since we don't have it
+check_required_components(WLib)

@@ -33,21 +33,24 @@ target_compile_definitions(${PROJECT_NAME}
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 
-# install actual compiled binaries produced by WLib library
+# Save library targets into ${PROJECT_NAME}Targets export set as a WLib component
+# This doesn't install any real files
 install(TARGETS ${PROJECT_NAME}
         EXPORT ${PROJECT_NAME}Targets
         COMPONENT ${PROJECT_NAME}
         FILE_SET HEADERS
 )
 
-# install targets' resulting files (WLibTargets.cmake),
-# this is where WLib::WLib points to actual library binary files
+# install the export set as an actual ${PROJECT_NAME}Targets.cmake and ${PROJECT_NAME}Targets-${CMAKE_BUILD_TYPE}.cmake
 install(EXPORT ${PROJECT_NAME}Targets
         DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
-        NAMESPACE {PROJECT_NAME}::
+        NAMESPACE ${PROJECT_NAME}::
+        COMPONENT ${PROJECT_NAME}
 )
 
 # Generate main config file which can be used in find_package later
+# Generate  config file
+# From a template file, all this file does is load  ${PROJECT_NAME}Targets.cmake and checks if components are present inside
 configure_package_config_file(
         "${CMAKE_CURRENT_SOURCE_DIR}/cmake/${PROJECT_NAME}Config.cmake.in"
         "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
@@ -60,6 +63,24 @@ write_basic_package_version_file(
         "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Version.cmake"
         COMPATIBILITY SameMajorVersion
 )
+
+install(
+        FILES
+        "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+        "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Version.cmake"
+        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
+)
+
+# generate and install .cps from ${PROJECT_NAME}Targets export set
+if (CMAKE_VERSION VERSION_GREATER_EQUAL "4.3")
+    install(
+        PACKAGE_INFO ${PROJECT_NAME}
+        EXPORT ${PROJECT_NAME}Targets
+        VERSION ${PROJECT_VERSION}
+        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
+        COMPONENT ${PROJECT_NAME}
+    )
+endif ()
 
 if (WLIB_BUILD_DOCS)
     find_package(Doxygen REQUIRED)
